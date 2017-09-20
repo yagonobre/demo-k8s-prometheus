@@ -1,0 +1,6 @@
+FROM scratch
+
+ADD app /
+
+ENTRYPOINT ["./app"]
+EXPOSE 8080
