@@ -1,17 +1,26 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"github.com/yagonobre/demo-k8s-prometheus/delay"
 )
+
+var (
+	requestsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "demo_requests_total",
+		Help: "The current number of requests.",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(requestsTotal)
+}
 
 func server() {
 	r := mux.NewRouter().StrictSlash(true)
@@ -23,6 +32,14 @@ func server() {
 	s := &http.Server{
 		Addr:    ":8080",
 		Handler: r,
+		ConnState: func(c net.Conn, s http.ConnState) {
+			switch s {
+			case http.StateNew:
+				requestsTotal.Inc()
+			case http.StateHijacked | http.StateClosed:
+				requestsTotal.Dec()
+			}
+		},
 	}
 
 	log.Fatal(s.ListenAndServe())
