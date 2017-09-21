@@ -27,16 +27,21 @@ func hostnameWithDelay(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, hn)
 }
 
-func handle() {
+func server() {
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/hostname", hostname)
 	r.HandleFunc("/", hostnameWithDelay)
 
 	r.Handle("/metrics", promhttp.Handler())
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	s := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	log.Fatal(s.ListenAndServe())
 }
 
 func main() {
-	handle()
+	server()
 }
