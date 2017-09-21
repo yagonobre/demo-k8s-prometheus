@@ -7,6 +7,9 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/yagonobre/demo-k8s-prometheus/delay"
 )
 
@@ -28,6 +31,9 @@ func handle() {
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/hostname", hostname)
 	r.HandleFunc("/", hostnameWithDelay)
+
+	r.Handle("/metrics", promhttp.Handler())
+
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
